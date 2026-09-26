@@ -1,0 +1,14 @@
+{
+  "name": "@gate-check/content-model",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts",
+    "./schema": "./src/schema/index.ts",
+    "./queries": "./src/queries/index.ts"
+  },
+  "dependencies": {
+    "sanity": "^6.16.0"
+  }
+}

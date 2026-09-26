@@ -1,0 +1,26 @@
+{
+  "name": "@gate-check/web",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev --port 3000",
+    "build": "next build",
+    "start": "next start"
+  },
+  "dependencies": {
+    "@ai-sdk/anthropic": "^4.0.65",
+    "@ai-sdk/mcp": "^2.0.60",
+    "@gate-check/content-model": "*",
+    "@gate-check/resolver": "*",
+    "@sanity/client": "^8.7.0",
+    "ai": "^7.0.116",
+    "next": "^16.3.6",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "zod": "^4.6.5"
+  },
+  "devDependencies": {
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0"
+  }
+}

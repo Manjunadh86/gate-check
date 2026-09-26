@@ -1,0 +1,21 @@
+{
+  "name": "@gate-check/studio",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "sanity dev --port 3333",
+    "build": "sanity build",
+    "deploy": "sanity deploy",
+    "schema:deploy": "sanity schema deploy",
+    "manifest": "sanity manifest extract"
+  },
+  "dependencies": {
+    "@gate-check/content-model": "*",
+    "@sanity/vision": "^6.16.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "sanity": "^6.16.0",
+    "styled-components": "^6.5.3"
+  }
+}

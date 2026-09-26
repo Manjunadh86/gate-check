@@ -1,0 +1,28 @@
+{
+  "name": "gate-check",
+  "private": true,
+  "version": "0.1.0",
+  "description": "An agent that answers cabin-baggage and lithium-battery questions per flight segment, from sourced claims in Sanity.",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20.19"
+  },
+  "scripts": {
+    "dev": "npm run dev -w @gate-check/web",
+    "studio": "npm run dev -w @gate-check/studio",
+    "build": "npm run build -w @gate-check/web",
+    "typecheck": "tsc --noEmit -p packages/content-model && tsc --noEmit -p packages/resolver",
+    "test": "node --test packages/resolver/src/*.test.ts",
+    "seed": "node seed/import.ts",
+    "eval": "node --experimental-strip-types evals/run.ts",
+    "seed:ndjson": "node seed/import.ts --ndjson"
+  },
+  "devDependencies": {
+    "@types/node": "^24.5.2",
+    "typescript": "^7.0.2"
+  },
+  "type": "module"
+}
