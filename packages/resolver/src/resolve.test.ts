@@ -317,3 +317,28 @@ describe('seat-count scoping', () => {
     assert.ok(regional.some((v) => v.outcome === 'prohibited'), '50 seats, no cabin bags')
   })
 })
+
+describe('excluded claims', () => {
+  test('a rule ruled out by seat count says so in words', () => {
+    const connection = f.claim('carryOnPieceCount', 0, {
+      scope: {carrierIds: [f.delta._id], appliesAtOrBelowSeats: 50},
+    })
+    const mainline = f.claim('carryOnPieceCount', 1, {scope: {carrierIds: [f.delta._id]}})
+    const r = resolveSubject('carryOnPieceCount', [connection, mainline], [], sit())
+
+    assert.equal(r.value.kind === 'number' && r.value.n, 1, 'the 737 gets the mainline allowance')
+    assert.equal(r.excluded.length, 1)
+    assert.equal(r.excluded[0]!.claim._id, connection._id)
+    assert.match(r.excluded[0]!.reason, /50 seats or fewer.*Boeing 737-900 has 180 seats/)
+  })
+
+  test('a power-bank rule is visibly set aside for a camera battery', () => {
+    const pb = f.claim('spareBatteryMaxWh', 100, {scope: {itemCategories: ['power-bank']}})
+    const general = f.claim('spareBatteryMaxWh', 160, {})
+    const r = resolveSubject('spareBatteryMaxWh', [pb, general], [], sit({}, {category: 'camera-battery', batteryState: 'spare'}))
+
+    assert.equal(r.value.kind === 'number' && r.value.n, 160)
+    assert.equal(r.excluded.length, 1)
+    assert.match(r.excluded[0]!.reason, /written about power-bank, and this item is camera-battery/)
+  })
+})

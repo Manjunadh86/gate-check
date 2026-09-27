@@ -412,6 +412,23 @@ function Verdicts({result}: {result: EngineResponse}) {
                           </div>
                         ) : null}
 
+                        {f.resolution.excluded.length > 0 ? (
+                          <details className="ruled-out">
+                            <summary>
+                              {f.resolution.excluded.length} rule{f.resolution.excluded.length === 1 ? '' : 's'} read
+                              and set aside
+                            </summary>
+                            <ul>
+                              {f.resolution.excluded.map((x) => (
+                                <li key={x.claim._id}>
+                                  <span className="pub">{x.claim.source?.publisherName}</span> — {x.reason}
+                                  {x.claim.quote ? <span className="q">“{x.claim.quote}”</span> : null}
+                                </li>
+                              ))}
+                            </ul>
+                          </details>
+                        ) : null}
+
                         {f.resolution.unresolved ? (
                           <div className="flag">
                             <strong>Nobody has ruled on this.</strong> The sources above disagree and nothing in the

@@ -1,5 +1,5 @@
 import type {Claim, ClaimSubject, Ruling, Situation} from '@gate-check/content-model'
-import {rulingApplies, scopeMatches} from './scope.ts'
+import {explainExclusion, rulingApplies, scopeMatches} from './scope.ts'
 import {claimValue, compareRestrictiveness, formatValue, mostRestrictive, valueKey, type ClaimValue} from './values.ts'
 
 export type ResolutionMethod =
@@ -18,6 +18,12 @@ export type ResolutionMethod =
 export interface ScoredClaim {
   claim: Claim
   specificity: number
+}
+
+/** A claim about this subject that was ruled out, and the facet that ruled it out. */
+export interface ExcludedClaim {
+  claim: Claim
+  reason: string
 }
 
 export interface Resolution {
@@ -44,6 +50,12 @@ export interface Resolution {
   unresolved: boolean
   appliedRuling: Ruling | null
   explanation: string
+  /**
+   * Claims about this subject that were current but did not cover this situation.
+   * Shown so a traveller can see that the rule they found online was read and set
+   * aside for a stated reason, rather than never considered.
+   */
+  excluded: ExcludedClaim[]
 }
 
 const inWindow = (from: string | null | undefined, to: string | null | undefined, date: string): boolean =>
@@ -130,14 +142,21 @@ export function resolveSubject(
   signedRulings: Ruling[],
   situation: Situation,
 ): Resolution {
-  const scored: ScoredClaim[] = currentClaims(
+  const matched = currentClaims(
     allClaims.filter((c) => c.subject === subject),
     situation.travelDate,
   )
+    .filter((c) => claimValue(c).kind !== 'missing')
     .map((claim) => ({claim, match: scopeMatches(claim.scope, situation)}))
-    .filter((x) => x.match.matched && claimValue(x.claim).kind !== 'missing')
+
+  const scored: ScoredClaim[] = matched
+    .filter((x) => x.match.matched)
     .map((x) => ({claim: x.claim, specificity: x.match.specificity}))
     .sort((a, b) => b.specificity - a.specificity)
+
+  const excluded: ExcludedClaim[] = matched
+    .filter((x) => !x.match.matched && x.match.failedOn)
+    .map((x) => ({claim: x.claim, reason: explainExclusion(x.claim.scope, situation, x.match.failedOn!)}))
 
   const disagreement = distinct(scored) > 1
   const finish = (
@@ -150,6 +169,7 @@ export function resolveSubject(
     return {
       subject,
       considered: scored,
+      excluded,
       governing,
       value,
       formatted: governing ? formatValue(subject, value) : '—',

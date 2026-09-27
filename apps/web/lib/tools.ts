@@ -77,6 +77,14 @@ export function localTools(bundle: McpBundle | null, collect: (v: Verdict[]) => 
                   quote: c.claim.quote ?? null,
                   url: c.claim.source?.url,
                 })),
+              // Rules that were read and set aside, with the facet that ruled each
+              // one out. Capped: a traveller asking "but I read 160 Wh somewhere"
+              // needs the two or three that look relevant, not the whole corpus.
+              ruledOut: f.resolution.excluded.slice(0, 4).map((x) => ({
+                publisher: x.claim.source?.publisherName,
+                quote: x.claim.quote ?? null,
+                whyNotApplied: x.reason,
+              })),
             })),
           })),
         }

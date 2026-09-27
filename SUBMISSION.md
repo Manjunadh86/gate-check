@@ -57,11 +57,11 @@ Three more things worth clicking:
 
 ```bash
 npm install
-npm test      # 24 unit tests on the resolver
+npm test      # 33 tests: 26 on the resolver, 7 on the Context MCP wiring
 npm run eval  # 11 known-answer cases against the real corpus
 ```
 
-Both run on a fresh clone with **no credentials and no Sanity account**. Every correctness claim in this post is checkable in about thirty seconds, which felt like the least I could do given that the app's whole pitch is "don't take anyone's word for it".
+All of it runs on a fresh clone with **no credentials and no Sanity account**. Every correctness claim in this post is checkable in about thirty seconds, which felt like the least I could do given that the app's whole pitch is "don't take anyone's word for it".
 
 ## How I used Sanity
 
@@ -91,13 +91,15 @@ Sanity derives an endpoint's mode from its sources, and if an endpoint has both 
 - `gate-check-claims` — dataset source, GROQ mode, with a `groqFilter` so the agent cannot wander into the app's own check-run records. Serves `initial_context`, `schema_explorer`, `groq_query`.
 - `gate-check-prose` — knowledge-base source, KB mode. Serves `knowledge_base_read`.
 
-Tool names get namespaced (`content_*`, `kb_*`) on the way in, because **both modes expose a tool called `initial_context`** and merging them unprefixed silently drops one. That took an embarrassingly long time to notice.
+Tool names get namespaced (`content_*`, `kb_*`) on the way in, because **both modes expose a tool called `initial_context`** and merging them unprefixed silently drops one. That took an embarrassingly long time to notice, so there is now a test whose only job is to fail if it ever regresses.
+
+That test is one of seven that talk JSON-RPC to a local server impersonating a Context endpoint — `apps/web/lib/fakeContextServer.ts`, a real Streamable HTTP server the unmodified client connects to. They cover the things you cannot reason about from the source: whether the client actually connects, whether both `initial_context` tools survive the merge, whether the double-wrapped `groq_query` payload comes back as rows, and whether one dead endpoint takes the other down with it. Worth building because the alternative was finding out on demo day.
 
 **The corpus is what justifies the split.** American's *"large portable power banks"* has no number in it, so it carries no structured claim at all — it is precisely the prose the Knowledge Base exists to return. The FAA's 160 Wh ceiling *is* a number and belongs in GROQ mode where the engine can compare against it. I did not decide to use both modes and then look for a reason; the content split first.
 
 ### The model does not do arithmetic
 
-Threshold comparison, scope matching and conflict resolution all run in a pure, dependency-free package with 24 unit tests. The agent reads the question, picks the itinerary and items, pulls prose, and writes the explanation. The system prompt is blunt about it:
+Threshold comparison, scope matching and conflict resolution all run in a pure, dependency-free package with 26 unit tests. The agent reads the question, picks the itinerary and items, pulls prose, and writes the explanation. The system prompt is blunt about it:
 
 > If you find yourself reasoning "137 is more than 100, so…", stop and call the tool.
 
@@ -114,7 +116,9 @@ Most of the work here went into *not* answering.
 - **A 99 Wh laptop battery comes back `unknown`, not `allowed`.** Neither FAA page sets a ceiling for a battery installed in a device — both defer to the spare-battery entries. The corpus is genuinely silent, so the engine says so. There is an eval case whose only purpose is to fail if that ever becomes `allowed`, because that would mean the engine had started asserting things no source says.
 - **Unorderable conflicts stay unresolved.** The CRJ-200 bin reports cannot be ordered, so no value is returned and it goes on the backlog. Splitting the difference would have invented a measurement that appears in no source.
 - **When it does fall back, it labels itself.** Equal authority, equal date, nobody has ruled → the tighter figure, marked `most-restrictive`, with both claims side by side.
-- **Losing claims are always shown.** Travellers get turned away by gate agents reading the other page. Hiding the other page would be the cruellest possible UX.
+- **Losing claims are always shown**, and so are the rules that never applied in the first place. Every finding can list each claim that was read and set aside with the facet that excluded it — *"applies only to aircraft of 50 seats or fewer, and the Boeing 737-900 has 180 seats"*. The scope matcher already knows which facet failed, so this was free; I had just been throwing it away. For the traveller who says *"but I read 160 Wh somewhere"*, it is the entire answer, and it makes the scope machinery visible instead of magic.
+
+  Travellers get turned away by gate agents reading the other page. Hiding the other page would be the cruellest possible UX.
 
 ## Honest limits
 

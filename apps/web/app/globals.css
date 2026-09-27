@@ -224,3 +224,24 @@ textarea.ask:focus { outline: none; border-color: var(--accent); }
   color: var(--accent); cursor: pointer; text-align: left;
 }
 .hint button:hover { text-decoration: underline; }
+
+/*
+ * "Read and set aside" — the scope machinery made visible.
+ *
+ * Collapsed by default because it is reassurance rather than instruction: it
+ * matters enormously to the one traveller who found a different number online, and
+ * is noise to everyone else.
+ */
+.ruled-out { margin-top: 8px; font-size: 12px; }
+.ruled-out > summary {
+  cursor: pointer; color: var(--ink-faint); font-family: var(--mono); font-size: 11px;
+  list-style: none;
+}
+.ruled-out > summary::-webkit-details-marker { display: none; }
+.ruled-out > summary::before { content: "+ "; }
+.ruled-out[open] > summary::before { content: "− "; }
+.ruled-out > summary:hover { color: var(--ink-dim); }
+.ruled-out ul { margin: 7px 0 0; padding-left: 14px; color: var(--ink-dim); }
+.ruled-out li { margin-bottom: 6px; }
+.ruled-out .pub { color: var(--ink); font-weight: 600; }
+.ruled-out .q { display: block; color: var(--ink-faint); margin-top: 2px; }

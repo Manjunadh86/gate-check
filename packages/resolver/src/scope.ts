@@ -144,3 +144,47 @@ export function scopeMatches(scope: ResolvedScope, situation: Situation): ScopeM
  */
 export const rulingApplies = (scope: ResolvedScope, situation: Situation): boolean =>
   scopeMatches(scope, situation).matched
+
+/**
+ * Why a claim did not apply, in a sentence.
+ *
+ * The scope machinery is the most interesting thing in this system and it is
+ * invisible when it works. Surfacing the facet that ruled a claim out turns "the
+ * app gave me a number" into "the app can show me the rule it decided was about a
+ * different aeroplane" — which is the difference between a verdict you trust and
+ * one you take on faith.
+ */
+export function explainExclusion(
+  scope: ResolvedScope,
+  situation: Situation,
+  failedOn: keyof typeof SPECIFICITY_WEIGHTS,
+): string {
+  switch (failedOn) {
+    case 'carrierIds':
+      return `written for a different operating carrier — this segment is flown by ${situation.operatingCarrierId}`
+    case 'aircraftTypeIds':
+      return `written for specific aircraft types, and this segment is a ${situation.aircraft.name}`
+    case 'aircraftFamilies':
+      return `written for ${scope.aircraftFamilies.join(' or ')} aircraft, and this is a ${situation.aircraft.family}`
+    case 'appliesAtOrBelowSeats':
+      return `applies only to aircraft of ${scope.appliesAtOrBelowSeats} seats or fewer, and the ${situation.aircraft.name} has ${situation.aircraft.seats ?? 'an unrecorded number of'} seats`
+    case 'cabinClasses':
+      return `written for ${scope.cabinClasses.join(' or ')}, and this segment is ${situation.cabinClass}`
+    case 'fareBrands':
+      return `written for the ${scope.fareBrands.join(' or ')} fare, and this ticket is ${situation.fareBrand ?? 'an unrecorded fare'}`
+    case 'minimumTier':
+      return situation.tierHeld
+        ? `needs ${scope.minimumTier?.tierName} with the carrier that granted it, and the tier held does not qualify on this segment`
+        : `needs ${scope.minimumTier?.tierName ?? 'a loyalty tier'}, and no tier is recorded for this traveller`
+    case 'jurisdictionIds':
+      return 'written for a jurisdiction this route does not touch'
+    case 'itemCategories':
+      return `written about ${scope.itemCategories.join(' or ')}, and this item is ${situation.itemCategory ?? 'uncategorised'}`
+    case 'batteryStates':
+      return `written about cells that are ${scope.batteryStates.join(' or ')}, and this one is ${situation.batteryState ?? 'not a battery'}`
+    case 'appliesAboveWh':
+      return `applies only above ${scope.appliesAboveWh} Wh, and this item is ${situation.wattHours ?? 'unrated'} Wh`
+    case 'appliesAtOrBelowWh':
+      return `applies only at or below ${scope.appliesAtOrBelowWh} Wh, and this item is ${situation.wattHours ?? 'unrated'} Wh`
+  }
+}

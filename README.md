@@ -54,7 +54,7 @@ agent (Claude, via AI SDK)
 
 **The corpus justifies the split.** American Airlines' notice says *"Large portable power banks … are not allowed as carry-on or checked items"* and never defines "large". There is no number to compute with, so it carries no structured claim at all — it is exactly the prose the Knowledge Base exists to return. Meanwhile the FAA's 160 Wh ceiling is a number, and belongs in GROQ mode where the engine can compare against it.
 
-**The model does not do arithmetic.** Threshold comparison, scope matching and conflict resolution run in `@gate-check/resolver` — pure functions, no I/O, 24 unit tests. The model reads the question, picks the itinerary and items, pulls prose, and writes the explanation. "Is 137 above 100" is not a job for a language model, and an answer a traveller acts on has to be reproducible. The system prompt says so explicitly: *"If you find yourself reasoning '137 is more than 100, so…', stop and call the tool."*
+**The model does not do arithmetic.** Threshold comparison, scope matching and conflict resolution run in `@gate-check/resolver` — pure functions, no I/O, 26 unit tests. The model reads the question, picks the itinerary and items, pulls prose, and writes the explanation. "Is 137 above 100" is not a job for a language model, and an answer a traveller acts on has to be reproducible. The system prompt says so explicitly: *"If you find yourself reasoning '137 is more than 100, so…', stop and call the tool."*
 
 **Writes happen server-side.** Context MCP is read-only by design, so the agent never holds a write credential. Check runs and proposed rulings are written by a server route after the agent finishes.
 
@@ -66,12 +66,13 @@ Most of the engineering here is about *not* answering.
 - **Unorderable conflicts stay unresolved.** Two traveller reports of CRJ-200 bin size are 21×14×7 and 18×13×8 inches. Neither fits inside the other — one is longer, one is deeper. The resolver refuses to order them, returns no value, and flags it for a ruling rather than splitting the difference.
 - **When it does fall back, it says so.** If sources of equal authority and date disagree and nobody has ruled, the tighter figure is used and the answer is labelled `most-restrictive` with the conflict shown. Both claims appear side by side, because travellers get turned away by gate agents reading the other page.
 - **Losing claims are shown, not hidden.** Every finding lists what was considered and not used, with publisher, document class, quote and link.
+- **So are the rules that never applied.** Each finding can show every claim about that subject that was read and set aside, with the facet that ruled it out — *"applies only to aircraft of 50 seats or fewer, and the Boeing 737-900 has 180 seats"*. It costs nothing to compute, since the scope matcher already knows which facet failed, and it is the difference between a verdict you trust and one you take on faith. For the traveller who says "but I read 160 Wh somewhere", it is the whole answer.
 
 ## Layout
 
 ```
 packages/content-model/   Schema, vocabulary, TS types, every GROQ query
-packages/resolver/        Pure resolution + verdict engine. 24 unit tests, no I/O
+packages/resolver/        Pure resolution + verdict engine. 26 unit tests, no I/O
 apps/studio/              Sanity Studio, with a structure built for auditing claims
 apps/web/                 Next.js app: the agent, the engine route, the interface
 seed/                     The corpus, and the importer
@@ -84,11 +85,14 @@ evals/                    11 known-answer cases, runnable with no Sanity account
 
 ```bash
 npm install
-npm test          # 24 unit tests on the resolver
-npm run eval      # 11 known-answer cases against the seeded corpus — no Sanity needed
+npm test          # 33 tests: 26 on the resolver, 7 on the Context MCP wiring
+npm run eval      # 11 known-answer cases against the seeded corpus
+npm run typecheck
 ```
 
-Both of those work on a fresh clone with no credentials, which is the point: the correctness claims in this README are checkable in about thirty seconds.
+All of that works on a fresh clone with **no credentials and no Sanity account**, which is the point: the correctness claims in this README are checkable in about thirty seconds.
+
+The seven MCP tests are integration tests, not mocks of our own code. `apps/web/lib/fakeContextServer.ts` is a real JSON-RPC server over Streamable HTTP that impersonates a Context endpoint in either mode, and the unmodified client talks to it. They exist because the agent's most fragile seam could not otherwise be exercised without an organisation token and a beta feature flag: two endpoints whose tool names collide, a `groq_query` payload wrapped in two envelopes, and the degradation path when one endpoint is unreachable. The fake server reproduces the `initial_context` collision deliberately.
 
 For the app itself, see [SETUP.md](SETUP.md). Short version: `cp .env.example .env`, add a Sanity project id and a write token, `npm run seed`, `npm run studio`, `npm run dev`. The two Context MCP endpoints are optional — without them the app reads the same dataset over the ordinary client, runs the engine normally, and **says on the page** which wire every figure came down. A demo that looked identical whether or not it was using Context would be a demo you could not trust.
 

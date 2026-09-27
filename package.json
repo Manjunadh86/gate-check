@@ -15,7 +15,7 @@
     "studio": "npm run dev -w @gate-check/studio",
     "build": "npm run build -w @gate-check/web",
     "typecheck": "tsc --noEmit -p packages/content-model && tsc --noEmit -p packages/resolver",
-    "test": "node --test packages/resolver/src/*.test.ts",
+    "test": "node --test packages/resolver/src/*.test.ts apps/web/lib/*.test.ts",
     "seed": "node seed/import.ts",
     "eval": "node --experimental-strip-types evals/run.ts",
     "seed:ndjson": "node seed/import.ts --ndjson"
