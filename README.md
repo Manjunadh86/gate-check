@@ -85,12 +85,14 @@ evals/                    11 known-answer cases, runnable with no Sanity account
 
 ```bash
 npm install
-npm test          # 42 tests: 26 resolver, 8 Context MCP wiring, 8 GROQ parity
+npm test          # 45 tests: 26 resolver, 8 MCP wiring, 3 agent loop, 8 GROQ parity
 npm run eval      # 11 known-answer cases against the seeded corpus
 npm run typecheck
 ```
 
 All of that works on a fresh clone with **no credentials and no Sanity account**, which is the point: the correctness claims in this README are checkable in about thirty seconds.
+
+Three further tests drive the agent loop itself with a mock model, which is the only way it gets exercised without spending money on a live one: that tools from both endpoints and the two local tools land in one callable set, that a `resolve_verdicts` call runs the real engine and the verdicts come back off the tool call rather than being parsed out of prose, and that a bad itinerary id returns a tool error instead of an exception.
 
 The eight MCP tests are integration tests, not mocks of our own code. `apps/web/lib/fakeContextServer.ts` is a real JSON-RPC server over Streamable HTTP that impersonates a Context endpoint in either mode, and the unmodified client talks to it. They exist because the agent's most fragile seam could not otherwise be exercised without an organisation token and a beta feature flag: two endpoints whose tool names collide, a `groq_query` payload wrapped in two envelopes, and the degradation path when one endpoint is unreachable. The fake server reproduces the `initial_context` collision deliberately.
 

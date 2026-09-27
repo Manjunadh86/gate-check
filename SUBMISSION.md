@@ -65,7 +65,7 @@ Three more things worth clicking:
 
 ```bash
 npm install
-npm test      # 42 tests: 26 resolver, 8 Context MCP wiring, 8 GROQ parity
+npm test      # 45 tests: 26 resolver, 8 MCP wiring, 3 agent loop, 8 GROQ parity
 npm run eval  # 11 known-answer cases against the real corpus
 ```
 

@@ -56,6 +56,7 @@ interface EngineResponse {
 interface AgentResponse extends Omit<EngineResponse, 'itinerary' | 'claimsConsidered' | 'signedRulings'> {
   answer: string
   steps: number
+  toolNames: string[]
   toolCalls: {name: string; args: unknown}[]
   checkRunId: string | null
   model: string
@@ -304,13 +305,19 @@ export function CheckBoard({
                 <div className="answer">{agent.answer}</div>
                 <details style={{marginTop: 14}}>
                   <summary className="trace" style={{cursor: 'pointer'}}>
-                    tool calls
+                    what it called, and what it had available
                   </summary>
                   <ol className="trace" style={{marginTop: 8}}>
                     {agent.toolCalls.map((c, i) => (
                       <li key={i}>{c.name}</li>
                     ))}
                   </ol>
+                  {/* content_* is the GROQ-mode endpoint, kb_* the Knowledge Base
+                      one, and the rest run locally. Worth showing: it is the only
+                      place the two-endpoint arrangement is visible from outside. */}
+                  <p className="trace" style={{marginTop: 8}}>
+                    offered {agent.toolNames.length}: {agent.toolNames.join(', ')}
+                  </p>
                 </details>
                 {agent.checkRunId ? (
                   <p className="hint">

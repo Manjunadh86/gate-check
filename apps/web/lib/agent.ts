@@ -1,5 +1,5 @@
 import {createAnthropic} from '@ai-sdk/anthropic'
-import {generateText, stepCountIs} from 'ai'
+import {generateText, stepCountIs, type LanguageModel} from 'ai'
 import {tripOutcome, type Verdict} from '@gate-check/resolver'
 import {env, hasModel} from './env.ts'
 import {closeMcp, openMcp, type McpBundle} from './mcp.ts'
@@ -39,6 +39,8 @@ export interface CheckResult {
   contentSource: 'context-mcp-groq' | 'direct-client'
   mcp: {groq: boolean; kb: boolean; warnings: string[]}
   steps: number
+  /** Every tool the agent was offered, so the interface can show what it had to work with. */
+  toolNames: string[]
   toolCalls: {name: string; args: unknown}[]
   checkRunId: string | null
   model: string
@@ -52,21 +54,27 @@ export interface CheckResult {
  * route: a long-lived client that dies quietly is much harder to diagnose than a
  * connection error you get on the request that caused it.
  */
-export async function runCheck(question: string): Promise<CheckResult> {
-  if (!hasModel()) throw new Error('ANTHROPIC_API_KEY is not set, so the agent cannot run.')
+export async function runCheck(question: string, opts: {model?: LanguageModel} = {}): Promise<CheckResult> {
+  // `model` is an injection seam for tests. The agent loop — tool assembly across
+  // two MCP endpoints plus the local tools, the step budget, the verdict
+  // collection, the write-back — is otherwise only exercisable by spending money
+  // on a live model, which means in practice it would not be exercised at all.
+  if (!opts.model && !hasModel()) throw new Error('ANTHROPIC_API_KEY is not set, so the agent cannot run.')
 
   let bundle: McpBundle | null = null
   const collected: Verdict[] = []
 
   try {
     bundle = await openMcp()
-    const anthropic = createAnthropic({apiKey: env.anthropicKey})
+    const model = opts.model ?? createAnthropic({apiKey: env.anthropicKey})(env.model)
+
+    const tools = {...bundle.tools, ...localTools(bundle, (v) => collected.push(...v))}
 
     const result = await generateText({
-      model: anthropic(env.model),
+      model,
       system: SYSTEM,
       prompt: question,
-      tools: {...bundle.tools, ...localTools(bundle, (v) => collected.push(...v))},
+      tools,
       stopWhen: stepCountIs(14),
     })
 
@@ -84,6 +92,7 @@ export async function runCheck(question: string): Promise<CheckResult> {
       contentSource,
       mcp: {...bundle.connected, warnings: bundle.warnings},
       steps: result.steps.length,
+      toolNames: Object.keys(tools).sort(),
       toolCalls,
       checkRunId,
       model: env.model,
