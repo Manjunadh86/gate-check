@@ -65,17 +65,40 @@ const source = (id: string | undefined) => {
   }
 }
 
-const stripType = (o: Raw | undefined) => {
-  if (!o) return null
-  const {_type, ...rest} = o
-  return rest
-}
+/**
+ * Mirrors DIMENSIONS_PROJECTION in the real queries.
+ *
+ * An explicit GROQ projection always returns every key it names, `null` included,
+ * whereas simply dropping `_type` from the stored object leaves optional keys
+ * absent. The parity test caught exactly that difference, so the shape is spelled
+ * out here rather than derived by subtraction.
+ */
+const dimensions = (o: Raw | undefined) =>
+  o
+    ? {
+        lengthMm: o.lengthMm ?? null,
+        widthMm: o.widthMm ?? null,
+        heightMm: o.heightMm ?? null,
+        wheelsAndHandlesIncluded: o.wheelsAndHandlesIncluded ?? null,
+      }
+    : null
+
+/** Mirrors the binOpening projection. */
+const binOpening = (o: Raw | undefined) =>
+  o
+    ? {
+        lengthMm: o.lengthMm ?? null,
+        widthMm: o.widthMm ?? null,
+        heightMm: o.heightMm ?? null,
+        note: o.note ?? null,
+      }
+    : null
 
 export const projectedClaims: Claim[] = (claims as Raw[]).map((c) => ({
   _id: c._id,
   subject: c.subject,
   bindingMode: c.bindingMode,
-  dimensionsValue: stripType(c.dimensionsValue) as Claim['dimensionsValue'],
+  dimensionsValue: dimensions(c.dimensionsValue) as Claim['dimensionsValue'],
   massKgValue: c.massKgValue ?? null,
   numberValue: c.numberValue ?? null,
   booleanValue: c.booleanValue ?? null,
@@ -119,7 +142,7 @@ const aircraft = (id: string) => {
     iataCode: a.iataCode ?? null,
     family: a.family,
     seats: a.seats ?? null,
-    binOpening: a.binOpening ? {...stripType(a.binOpening)} : null,
+    binOpening: binOpening(a.binOpening),
     gateCheckLikely: a.gateCheckLikely ?? null,
   }
 }
@@ -147,7 +170,7 @@ export const projectedItems: BagItem[] = (bagItems as Raw[]).map((i) => ({
   _id: i._id,
   label: i.label,
   category: i.category,
-  dimensionsMm: stripType(i.dimensionsMm) as BagItem['dimensionsMm'],
+  dimensionsMm: dimensions(i.dimensionsMm) as BagItem['dimensionsMm'],
   massKg: i.massKg ?? null,
   wattHours: i.wattHours ?? null,
   batteryState: i.batteryState,

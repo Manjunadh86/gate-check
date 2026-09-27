@@ -85,7 +85,7 @@ evals/                    11 known-answer cases, runnable with no Sanity account
 
 ```bash
 npm install
-npm test          # 33 tests: 26 on the resolver, 7 on the Context MCP wiring
+npm test          # 41 tests: 26 resolver, 7 Context MCP wiring, 8 GROQ parity
 npm run eval      # 11 known-answer cases against the seeded corpus
 npm run typecheck
 ```
@@ -95,6 +95,19 @@ All of that works on a fresh clone with **no credentials and no Sanity account**
 The seven MCP tests are integration tests, not mocks of our own code. `apps/web/lib/fakeContextServer.ts` is a real JSON-RPC server over Streamable HTTP that impersonates a Context endpoint in either mode, and the unmodified client talks to it. They exist because the agent's most fragile seam could not otherwise be exercised without an organisation token and a beta feature flag: two endpoints whose tool names collide, a `groq_query` payload wrapped in two envelopes, and the degradation path when one endpoint is unreachable. The fake server reproduces the `initial_context` collision deliberately.
 
 For the app itself, see [SETUP.md](SETUP.md). Short version: `cp .env.example .env`, add a Sanity project id and a write token, `npm run seed`, `npm run studio`, `npm run dev`. The two Context MCP endpoints are optional — without them the app reads the same dataset over the ordinary client, runs the engine normally, and **says on the page** which wire every figure came down. A demo that looked identical whether or not it was using Context would be a demo you could not trust.
+
+### The GROQ is tested too
+
+`evals/project.ts` reshapes the seed documents in TypeScript so the evaluation suite runs with no Sanity account. That is duplication, and duplication drifts — which would be a quiet disaster, because it would mean the suite proving the engine correct was feeding it a shape the live app never sees.
+
+So `evals/parity.test.ts` runs the real query strings through **`groq-js`, Sanity's own GROQ implementation**, against the real seeded documents, and asserts the results match the offline stand-in exactly. Same query text the Context MCP endpoint will execute, same evaluator semantics, no credentials.
+
+It found two real defects the moment it was written:
+
+- **`third-party` had no case in the authority `select()`**, so traveller-report claims were scoring 2 — the same as a marketing page — while `DOC_TYPE_AUTHORITY` in the vocabulary said 1. Authority is a conflict tie-breaker, so this could have changed a verdict. The fallback is now 1 rather than a middling value: an unrecognised document class should be trusted least, not averagely.
+- **Raw object projections were leaking Sanity's internal `_type` and `_key` keys** into results typed as plain value objects. Every object is now projected explicitly, which is the right habit anyway.
+
+Neither was visible from reading the code, and neither would have shown up until a demo.
 
 ## The corpus
 
@@ -109,5 +122,5 @@ Deliberately small. Knowledge Bases are capped at 150 documents in beta, and 63 
 - **Not travel advice.** Policies change; two of these pages changed in 2026 alone. `retrievedAt` is the expiry date on every row. Get anything approval-related in writing from the operating carrier.
 - **One airline group, properly.** Delta and its regional partners are modelled from their own pages. American appears only as prose, because no watt-hour figure on their page was specific enough to compute with. The model scales; the corpus is a demonstration.
 - **Mainline bin dimensions are absent, not estimated.** No manufacturer figure was found, and a guessed number would silently become a verdict. So the geometry check simply does not run on mainline metal, which is the honest failure rather than the convenient one.
-- **`evals/project.ts` duplicates the GROQ projections** so the suite runs offline. Duplication drifts. It is the weakest seam in the repo and it is flagged in its own header comment.
+- **`evals/project.ts` still duplicates the GROQ projections** so the suite runs offline. The parity test above keeps the two honest, but the duplication is real and a new projection has to be mirrored in both places. Generating the stand-in from the query text would be better.
 - **Interline allowance is unmodelled.** IATA Resolution 302 makes the *marketing* carrier the Most Significant Carrier for checked baggage on a multi-carrier ticket, which pulls against the operating-carrier rule this app applies to cabin baggage. The `scope` object has the facets to express it and the corpus does not yet use them. That is the next thing I would build.

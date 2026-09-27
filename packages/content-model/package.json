@@ -10,5 +10,8 @@
   },
   "dependencies": {
     "sanity": "^6.16.0"
+  },
+  "devDependencies": {
+    "groq-js": "^2.0.0"
   }
 }

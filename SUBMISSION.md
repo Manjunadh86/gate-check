@@ -57,7 +57,7 @@ Three more things worth clicking:
 
 ```bash
 npm install
-npm test      # 33 tests: 26 on the resolver, 7 on the Context MCP wiring
+npm test      # 41 tests: 26 resolver, 7 Context MCP wiring, 8 GROQ parity
 npm run eval  # 11 known-answer cases against the real corpus
 ```
 
@@ -109,6 +109,19 @@ Threshold comparison, scope matching and conflict resolution all run in a pure, 
 
 Context MCP is read-only by design, so the agent never holds a write credential. When it finishes, a server route writes a `checkRun` with the verdicts **denormalised into the document** — because when a carrier edits a page next week, that row still has to show what the traveller was told today. `propose_ruling` writes an unsigned ruling the same way.
 
+### The GROQ is under test as well
+
+The evaluation suite reads the seed documents through a TypeScript stand-in so it runs with no Sanity account, which is duplication, which drifts. If it drifted, the suite proving the engine correct would be feeding it a shape the live app never sees.
+
+So the real query strings also run through **`groq-js` — Sanity's own GROQ implementation** — against the real documents, with the results asserted equal to the stand-in. Same query text Context MCP will execute, same evaluator, no credentials needed.
+
+It found two genuine bugs in the first run:
+
+- **`third-party` had no case in my authority `select()`**, so traveller-report claims scored 2 — identical to a marketing page — while the TypeScript constant said 1. Authority breaks ties between conflicting claims, so that could have changed a verdict. The fallback is now 1 instead of a middling value, because an unrecognised document class should be trusted least, not averagely.
+- **Raw object projections were leaking `_type` and `_key`** into results typed as plain value objects.
+
+Neither was visible from reading the code. Both would have surfaced during a demo, which is a worse place to find them.
+
 ## What it refuses to do
 
 Most of the work here went into *not* answering.
@@ -125,7 +138,7 @@ Most of the work here went into *not* answering.
 - **Not travel advice.** Policies change — two of these pages changed in 2026 alone — and `retrievedAt` is the expiry date on every row. Anything approval-related, get in writing from the operating carrier.
 - **One airline group, properly.** Delta and its regional partners are modelled from their own pages. American appears only as prose. The model scales; 21 claims is a demonstration, not coverage.
 - **Mainline bin dimensions are absent, not estimated.** No manufacturer figure was findable, and a guessed number would silently become a verdict, so the geometry check simply does not run on mainline metal.
-- **`evals/project.ts` duplicates the GROQ projections** so the suite runs with no Sanity account. Duplication drifts, and it is the weakest seam in the repo. It says so in its own header.
+- **The offline projection stand-in is still duplication.** The parity test keeps it honest, but a new projection has to be written twice. Generating it from the query text would be the real fix.
 - **Interline allowance is unmodelled.** IATA Resolution 302 makes the *marketing* carrier the Most Significant Carrier for checked baggage, which pulls directly against the operating-carrier rule this app applies to cabin baggage. The scope object already has the facets to express it. That is the next thing I would build, and I would rather say so than quietly imply the problem is solved.
 
 ## Sanity Project Details

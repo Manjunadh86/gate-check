@@ -9,6 +9,10 @@
 
 const SOURCE_PROJECTION = /* groq */ `
   _id, title, url, publisherName, docType, retrievedAt, effectiveFrom, effectiveTo,
+  // Derived here rather than stored, so a document cannot claim its own authority.
+  // Must stay in step with DOC_TYPE_AUTHORITY in ../vocabulary.ts — there is a
+  // parity test that fails if it drifts. The fallback is 1, not a middling value:
+  // an unrecognised document class should be trusted least, not averagely.
   "authority": select(
     docType == "regulation" => 5,
     docType == "conditions-of-carriage" => 4,
@@ -16,7 +20,8 @@ const SOURCE_PROJECTION = /* groq */ `
     docType == "help-page" => 3,
     docType == "marketing-page" => 2,
     docType == "press-release" => 2,
-    2
+    docType == "third-party" => 1,
+    1
   ),
   "supersededById": supersededBy._ref
 `
@@ -40,8 +45,11 @@ const SCOPE_PROJECTION = /* groq */ `
   "appliesAtOrBelowWh": scope.appliesAtOrBelowWh
 `
 
+const DIMENSIONS_PROJECTION = /* groq */ `lengthMm, widthMm, heightMm, wheelsAndHandlesIncluded`
+
 export const CLAIM_PROJECTION = /* groq */ `
-  _id, subject, bindingMode, dimensionsValue, massKgValue, numberValue, booleanValue,
+  _id, subject, bindingMode, massKgValue, numberValue, booleanValue,
+  "dimensionsValue": dimensionsValue{ ${DIMENSIONS_PROJECTION} },
   effectiveFrom, effectiveTo, quote, confidence, note,
   "supersedesId": supersedes._ref,
   "scope": { ${SCOPE_PROJECTION} },
@@ -72,10 +80,13 @@ export const SIGNED_RULINGS = /* groq */ `
 `
 
 const CARRIER_PROJECTION = /* groq */ `
-  _id, name, iata, "countryId": country._ref, "tiers": coalesce(tiers, [])
+  _id, name, iata, "countryId": country._ref, "tiers": coalesce(tiers[]{name, rank}, [])
 `
 
-const AIRCRAFT_PROJECTION = /* groq */ `_id, name, iataCode, family, seats, binOpening, gateCheckLikely`
+const AIRCRAFT_PROJECTION = /* groq */ `
+  _id, name, iataCode, family, seats, gateCheckLikely,
+  "binOpening": binOpening{lengthMm, widthMm, heightMm, note}
+`
 
 export const ITINERARIES = /* groq */ `
   *[_type == "itinerary"] | order(label asc){
@@ -112,7 +123,8 @@ export const ITINERARY_BY_ID = /* groq */ `*[_type == "itinerary" && _id == $id]
 
 export const BAG_ITEMS = /* groq */ `
   *[_type == "bagItem"] | order(category asc, label asc){
-    _id, label, category, dimensionsMm, massKg, wattHours, batteryState, quantity, carriedIn
+    _id, label, category, massKg, wattHours, batteryState, quantity, carriedIn,
+    "dimensionsMm": dimensionsMm{ ${DIMENSIONS_PROJECTION} }
   }
 `
 
