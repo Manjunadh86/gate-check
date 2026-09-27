@@ -37,6 +37,20 @@ const prefix = (tools: ToolSet, p: string): ToolSet =>
 
 export async function openMcp(): Promise<McpBundle> {
   const warnings: string[] = []
+
+  // Offline mode reads the corpus straight out of the repo, so there is no network
+  // path to report on. Listing both endpoints as "not configured" here would be
+  // technically true and actively misleading.
+  if (env.offline) {
+    return {
+      tools: {} as ToolSet,
+      groqTools: null,
+      clients: [],
+      connected: {groq: false, kb: false},
+      warnings: [],
+    }
+  }
+
   let tools = {} as ToolSet
   let groqTools: ToolSet | null = null
   const clients: McpClient[] = []

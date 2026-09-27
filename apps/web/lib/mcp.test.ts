@@ -117,17 +117,42 @@ describe('Context MCP degradation', () => {
   })
 
   test('nothing configured yields no tools and two plain-language warnings', async () => {
+    // A configured project with no Context endpoints — the ordinary state of a
+    // checkout before the beta is switched on. Distinct from offline mode, which
+    // short-circuits before any of this.
+    process.env.NEXT_PUBLIC_SANITY_PROJECT_ID = 'test-project'
     const bundle = await openMcp()
     assert.deepEqual(bundle.connected, {groq: false, kb: false})
     assert.equal(Object.keys(bundle.tools).length, 0)
     assert.equal(bundle.warnings.length, 2)
     assert.match(bundle.warnings.join(' '), /reading the dataset over the ordinary client/)
     await closeMcp(bundle)
+    delete process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
   })
 
   test('groqViaMcp refuses rather than silently returning nothing when GROQ mode is absent', async () => {
+    process.env.NEXT_PUBLIC_SANITY_PROJECT_ID = 'test-project'
     const bundle = await openMcp()
     await assert.rejects(() => groqViaMcp(bundle, '*[_type == "claim"]'), /not available on the configured Context endpoint/)
     await closeMcp(bundle)
+    delete process.env.NEXT_PUBLIC_SANITY_PROJECT_ID
+  })
+
+  test('offline mode short-circuits before any connection is attempted', async () => {
+    process.env.GATE_CHECK_OFFLINE = '1'
+    // Deliberately pointing at a dead port: if offline mode tried to connect, this
+    // would produce a warning instead of silence.
+    process.env.SANITY_CONTEXT_GROQ_URL = 'http://127.0.0.1:1/mcp'
+    process.env.SANITY_ORGANIZATION_TOKEN = 'unused'
+    try {
+      const bundle = await openMcp()
+      assert.deepEqual(bundle.connected, {groq: false, kb: false})
+      assert.deepEqual(bundle.warnings, [], 'offline mode has no network path to report on')
+      await closeMcp(bundle)
+    } finally {
+      delete process.env.GATE_CHECK_OFFLINE
+      delete process.env.SANITY_CONTEXT_GROQ_URL
+      delete process.env.SANITY_ORGANIZATION_TOKEN
+    }
   })
 })

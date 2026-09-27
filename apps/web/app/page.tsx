@@ -1,5 +1,5 @@
 import {loadBagItems, loadItineraries} from '../lib/content.ts'
-import {env, hasKbMcp, hasGroqMcp, hasModel} from '../lib/env.ts'
+import {env, hasGroqMcp, hasKbMcp, hasModel} from '../lib/env.ts'
 import {CheckBoard} from './CheckBoard.tsx'
 import {Setup} from './Setup.tsx'
 
@@ -10,11 +10,12 @@ export default async function Page() {
     groqMcp: hasGroqMcp(),
     kbMcp: hasKbMcp(),
     model: hasModel(),
+    offline: env.offline,
     project: env.projectId || null,
     dataset: env.dataset,
   }
 
-  if (!env.projectId) return <Setup reason="no-project" wires={wires} />
+  if (!env.offline && !env.projectId) return <Setup reason="no-project" wires={wires} />
 
   let itineraries: Awaited<ReturnType<typeof loadItineraries>> = []
   let items: Awaited<ReturnType<typeof loadBagItems>> = []

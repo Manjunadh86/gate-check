@@ -12,6 +12,7 @@
     "@ai-sdk/mcp": "^2.0.60",
     "@gate-check/content-model": "*",
     "@gate-check/resolver": "*",
+    "@gate-check/seed": "*",
     "@sanity/client": "^8.7.0",
     "ai": "^7.0.116",
     "next": "^16.3.6",

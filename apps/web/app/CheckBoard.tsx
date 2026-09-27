@@ -23,6 +23,13 @@ const TRIP_LINE: Record<Outcome, string> = {
   unknown: 'Some of this is not covered by any sourced rule in the dataset.',
 }
 
+/** Three reading paths now, so this cannot be a two-way conditional. */
+const SOURCE_LABEL: Record<string, string> = {
+  'context-mcp-groq': 'Sanity Context MCP',
+  'direct-client': 'the ordinary Sanity client',
+  'offline-fixture': 'the seeded corpus in the repo, offline',
+}
+
 const CATEGORY_LABEL: Record<string, string> = {
   'cabin-bag': 'Cabin bags',
   'personal-item': 'Personal items',
@@ -348,7 +355,7 @@ function Verdicts({result}: {result: EngineResponse}) {
         {result.claimsConsidered > 0 ? (
           <span className="note">
             {result.claimsConsidered} claims and {result.signedRulings} signed rulings considered, via{' '}
-            {result.contentSource === 'context-mcp-groq' ? 'Context MCP' : 'the direct client'}.
+            {SOURCE_LABEL[result.contentSource] ?? result.contentSource}.
           </span>
         ) : null}
       </div>

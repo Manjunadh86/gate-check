@@ -1,17 +1,19 @@
 /**
- * A local stand-in for the GROQ projections in `@gate-check/content-model/queries`.
+ * The seeded corpus, reshaped exactly as the GROQ projections in
+ * `@gate-check/content-model/queries` would return it.
  *
- * Why this exists: the evaluation suite has to be runnable by anyone who clones the
- * repo, including a judge with no Sanity account and no Context beta access. So it
- * reads `seed/content.ts` directly and reshapes it exactly as the GROQ projections
- * would.
+ * Two callers depend on this. The evaluation suite uses it so the engine can be
+ * checked by anyone who clones the repo — no Sanity account, no Context beta
+ * access. And the app falls back to it in offline mode, so the interface can be
+ * looked at in thirty seconds rather than after a ten-step setup.
  *
- * This is duplication, and duplication drifts. The mitigation is
- * `assertProjectionParity`, which fails the suite if the two disagree whenever a
- * dataset IS reachable — so the copy cannot quietly rot.
+ * This is duplication, and duplication drifts. `evals/parity.test.ts` is the
+ * mitigation: it runs the real query strings through groq-js, Sanity's own GROQ
+ * implementation, against the same documents and asserts the results match this
+ * file exactly. It has already caught two defects, so it is doing its job.
  */
 import {DOC_TYPE_AUTHORITY, type Claim, type DocType, type Itinerary, type Ruling, type BagItem, type ResolvedScope} from '@gate-check/content-model'
-import {aircraftTypes, bagItems, carriers, claims, itineraries, rulings, sourceDocs} from '../seed/content.ts'
+import {aircraftTypes, bagItems, carriers, claims, itineraries, rulings, sourceDocs} from './content.ts'
 
 type Raw = Record<string, any>
 

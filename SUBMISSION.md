@@ -41,6 +41,14 @@ Gate Check says:
 
 **<<DEMO_URL>>** — no login. The **Run the engine** button needs no model key at all.
 
+Or run it yourself in about thirty seconds, with no Sanity account and no credentials:
+
+```bash
+npm install && GATE_CHECK_OFFLINE=1 npm run dev
+```
+
+That reads the same corpus out of the repo instead of over the network, and the strip at the top of the page says so in as many words — it is there so this is quick to look at, not to blur where the content lives.
+
 Try this first: pick *JFK → ATL → TYS*, tick the **22 × 14 × 9 in roll-aboard** and the **16 Wh camera batteries × 4**, press **Run the engine**. Then open a verdict card — every finding shows the governing claim with its publisher, document class, quoted clause and link, and beneath it the claims that were considered and *not used*.
 
 Then press **Ask the agent** and open the *tool calls* disclosure to see it move between the two Context endpoints.
@@ -57,7 +65,7 @@ Three more things worth clicking:
 
 ```bash
 npm install
-npm test      # 41 tests: 26 resolver, 7 Context MCP wiring, 8 GROQ parity
+npm test      # 42 tests: 26 resolver, 8 Context MCP wiring, 8 GROQ parity
 npm run eval  # 11 known-answer cases against the real corpus
 ```
 

@@ -2,6 +2,7 @@ export interface WireState {
   groqMcp: boolean
   kbMcp: boolean
   model: boolean
+  offline: boolean
   project: string | null
   dataset: string
 }
@@ -14,6 +15,23 @@ export interface WireState {
  * whether or not it was using Context would be a demo you could not trust.
  */
 export function Wires({wires}: {wires: WireState}) {
+  // Offline mode says so first and on its own. Everything else on the strip is
+  // about which network path was used, and in offline mode there was not one.
+  if (wires.offline) {
+    return (
+      <div className="wires">
+        <span className="wire fallback">
+          <span className="dot" />
+          Offline — reading the seeded corpus from the repo, not from Sanity
+        </span>
+        <span className={`wire ${wires.model ? 'live' : 'fallback'}`}>
+          <span className="dot" />
+          {wires.model ? 'Agent available' : 'No model key — engine only'}
+        </span>
+      </div>
+    )
+  }
+
   return (
     <div className="wires">
       <span className={`wire ${wires.groqMcp ? 'live' : 'fallback'}`}>

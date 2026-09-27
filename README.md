@@ -85,14 +85,25 @@ evals/                    11 known-answer cases, runnable with no Sanity account
 
 ```bash
 npm install
-npm test          # 41 tests: 26 resolver, 7 Context MCP wiring, 8 GROQ parity
+npm test          # 42 tests: 26 resolver, 8 Context MCP wiring, 8 GROQ parity
 npm run eval      # 11 known-answer cases against the seeded corpus
 npm run typecheck
 ```
 
 All of that works on a fresh clone with **no credentials and no Sanity account**, which is the point: the correctness claims in this README are checkable in about thirty seconds.
 
-The seven MCP tests are integration tests, not mocks of our own code. `apps/web/lib/fakeContextServer.ts` is a real JSON-RPC server over Streamable HTTP that impersonates a Context endpoint in either mode, and the unmodified client talks to it. They exist because the agent's most fragile seam could not otherwise be exercised without an organisation token and a beta feature flag: two endpoints whose tool names collide, a `groq_query` payload wrapped in two envelopes, and the degradation path when one endpoint is unreachable. The fake server reproduces the `initial_context` collision deliberately.
+The eight MCP tests are integration tests, not mocks of our own code. `apps/web/lib/fakeContextServer.ts` is a real JSON-RPC server over Streamable HTTP that impersonates a Context endpoint in either mode, and the unmodified client talks to it. They exist because the agent's most fragile seam could not otherwise be exercised without an organisation token and a beta feature flag: two endpoints whose tool names collide, a `groq_query` payload wrapped in two envelopes, and the degradation path when one endpoint is unreachable. The fake server reproduces the `initial_context` collision deliberately.
+
+### Seeing it without setting anything up
+
+```bash
+npm install
+GATE_CHECK_OFFLINE=1 npm run dev
+```
+
+That reads the seeded corpus straight out of `@gate-check/seed` — the same documents that get imported into Sanity, in the same shapes the GROQ projections return, guarded by the parity test above. The engine, the verdicts, the citations and the conflict handling all work. The provenance strip at the top of the page says **"Offline — reading the seeded corpus from the repo, not from Sanity"**, so nobody can mistake it for the real path.
+
+It exists because the difference between a judge trying this and not is whether it runs before they lose patience. Point it at a real project and the strip changes to say so.
 
 For the app itself, see [SETUP.md](SETUP.md). Short version: `cp .env.example .env`, add a Sanity project id and a write token, `npm run seed`, `npm run studio`, `npm run dev`. The two Context MCP endpoints are optional — without them the app reads the same dataset over the ordinary client, runs the engine normally, and **says on the page** which wire every figure came down. A demo that looked identical whether or not it was using Context would be a demo you could not trust.
 

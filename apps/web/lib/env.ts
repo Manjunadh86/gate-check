@@ -40,6 +40,24 @@ export const env = {
   get model() {
     return process.env.ANTHROPIC_MODEL ?? 'claude-sonnet-5'
   },
+  /**
+   * Offline mode reads the seeded corpus straight out of `@gate-check/seed` instead
+   * of over the network.
+   *
+   * It exists so the interface can be looked at in thirty seconds instead of after
+   * a ten-step setup — the difference between a judge trying this and not. It is
+   * the same content either way: the seed *is* the dataset. Implicit when no
+   * project id is configured, because a blank setup screen teaches nobody anything.
+   */
+  get offline() {
+    if (process.env.GATE_CHECK_OFFLINE === '0') return false
+    if (process.env.GATE_CHECK_OFFLINE === '1') return true
+    // Implied only when there is genuinely nowhere else to read from. Configured
+    // Context endpoints are a real content source even with no project id set, and
+    // an earlier version that ignored them silently disabled Context for anyone
+    // who set the endpoints first — which the MCP tests caught by failing.
+    return !process.env.NEXT_PUBLIC_SANITY_PROJECT_ID && !process.env.SANITY_CONTEXT_GROQ_URL
+  },
 }
 
 export const hasGroqMcp = () => Boolean(env.groqMcpUrl && env.organizationToken)
@@ -47,4 +65,4 @@ export const hasKbMcp = () => Boolean(env.kbMcpUrl && env.organizationToken)
 export const hasModel = () => Boolean(env.anthropicKey)
 
 /** What the UI badge shows, so nobody has to guess which wire an answer came down. */
-export type ContentSource = 'context-mcp-groq' | 'direct-client'
+export type ContentSource = 'context-mcp-groq' | 'direct-client' | 'offline-fixture'

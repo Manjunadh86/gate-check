@@ -5,9 +5,9 @@ const MESSAGES: Record<string, {title: string; body: React.ReactNode}> = {
     title: 'No Sanity project configured yet',
     body: (
       <>
-        Put your project id in <code>NEXT_PUBLIC_SANITY_PROJECT_ID</code> and restart. Everything else in this app —
-        the schema, the resolver, the seeded corpus — is already here and does not need a network call to read.
-        Follow <code>SETUP.md</code> from step 2.
+        Put your project id in <code>NEXT_PUBLIC_SANITY_PROJECT_ID</code> and restart, following <code>SETUP.md</code>
+        from step 2. Or run <code>GATE_CHECK_OFFLINE=1 npm run dev</code> to read the seeded corpus straight out of the
+        repo — same content, no network, and the page will say so at the top.
       </>
     ),
   },

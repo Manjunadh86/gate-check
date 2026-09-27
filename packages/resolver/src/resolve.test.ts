@@ -265,6 +265,13 @@ describe('verdicts on the real scenarios', () => {
 
     assert.ok(outbound.every((v) => v.outcome === 'allowed'), 'legal and it fits the 737 bins')
     assert.ok(regional.some((v) => v.outcome === 'prohibited'), 'the CRJ-200 segment allows zero cabin bags')
+    // The refusal has to be on the bag, not only on a separate row beside it.
+    const bagVerdict = regional.find((v) => v.itemId === bag._id)
+    assert.equal(bagVerdict?.outcome, 'prohibited', 'the bag itself must read prohibited, not gate-check-likely')
+    assert.ok(
+      bagVerdict?.findings.some((f) => f.test === 'Cabin bags permitted at all'),
+      'and it must say why',
+    )
     assert.ok(
       regional.some((v) => v.segmentLabel.includes('operated by Endeavor Air')),
       'the label has to name the operator, because that is the thing that changed',

@@ -206,6 +206,22 @@ function bagFindings(ctx: Ctx, item: BagItem): Finding[] {
     }
   }
 
+  // A zero allowance is the most important thing anyone can tell you about your
+  // bag, so it belongs on the bag. Reporting it only as a separate segment-level
+  // row left the bag itself reading "gate-check likely", which invites a traveller
+  // to turn up with it.
+  if (!isPersonal) {
+    const pieces = resolve(ctx, 'carryOnPieceCount')
+    if (pieces.value.kind === 'number' && pieces.value.n === 0) {
+      findings.push({
+        test: 'Cabin bags permitted at all',
+        outcome: 'prohibited',
+        detail: `This segment permits no cabin bag whatsoever \u2014 personal items only. It is not a question of size: there is no cabin bag allowance on the ${ctx.situation.aircraft.name}.`,
+        resolution: pieces,
+      })
+    }
+  }
+
   const dimsSubject: ClaimSubject = isPersonal ? 'personalItemMaxDimensionsMm' : 'carryOnMaxDimensionsMm'
   const dims = resolve(ctx, dimsSubject)
 
@@ -389,7 +405,9 @@ export function evaluateItinerary(
     )
     const segSituation = buildSituation(itinerary, segment)
 
-    if (pieces.value.kind === 'number' && cabinBags.length > pieces.value.n) {
+    // The zero case is reported on each bag above, so this row is only for carrying
+    // more pieces than an existing allowance permits.
+    if (pieces.value.kind === 'number' && pieces.value.n > 0 && cabinBags.length > pieces.value.n) {
       verdicts.push({
         segmentIndex: i,
         segmentLabel: segmentLabel(segment),

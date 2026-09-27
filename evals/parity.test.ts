@@ -9,8 +9,8 @@ import {
   NEEDS_ATTENTION,
   SIGNED_RULINGS,
 } from '@gate-check/content-model/queries'
-import {allDocuments} from '../seed/content.ts'
-import {projectedClaims, projectedItems, projectedItineraries, projectedSignedRulings} from './project.ts'
+import {allDocuments} from '@gate-check/seed'
+import {projectedClaims, projectedItems, projectedItineraries, projectedSignedRulings} from '@gate-check/seed/projected'
 
 /**
  * Parity between the real GROQ projections and the offline stand-in.

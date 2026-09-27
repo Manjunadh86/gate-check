@@ -5,7 +5,8 @@
   "description": "An agent that answers cabin-baggage and lithium-battery questions per flight segment, from sourced claims in Sanity.",
   "workspaces": [
     "packages/*",
-    "apps/*"
+    "apps/*",
+    "seed"
   ],
   "engines": {
     "node": ">=20.19"

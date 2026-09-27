@@ -1,0 +1,15 @@
+{
+  "name": "@gate-check/seed",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "The seeded corpus: raw documents, the importer, and the projected shapes both the eval suite and the app's offline mode read.",
+  "exports": {
+    ".": "./content.ts",
+    "./projected": "./projected.ts"
+  },
+  "dependencies": {
+    "@gate-check/content-model": "*",
+    "@sanity/client": "^8.7.0"
+  }
+}

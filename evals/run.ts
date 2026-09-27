@@ -10,7 +10,7 @@
  */
 import {evaluateItinerary, tripOutcome, type Verdict} from '@gate-check/resolver'
 import {CASES} from './cases.ts'
-import {item, itinerary, projectedClaims, projectedItems, projectedSignedRulings, proposedRulings} from './project.ts'
+import {item, itinerary, projectedClaims, projectedItems, projectedSignedRulings, proposedRulings} from '@gate-check/seed/projected'
 
 const asJson = process.argv.includes('--json')
 const worstPerSegment = (verdicts: Verdict[], index: number) =>

@@ -1,6 +1,7 @@
 import {ALL_CLAIMS, BAG_ITEMS, ITINERARIES, ITINERARY_BY_ID, SIGNED_RULINGS} from '@gate-check/content-model/queries'
 import type {BagItem, Claim, Itinerary, Ruling} from '@gate-check/content-model'
-import type {ContentSource} from './env.ts'
+import {projectedClaims, projectedItems, projectedItineraries, projectedSignedRulings} from '@gate-check/seed/projected'
+import {env, type ContentSource} from './env.ts'
 import {groqViaMcp, type McpBundle} from './mcp.ts'
 import {readClient} from './sanity.ts'
 
@@ -19,6 +20,9 @@ export interface LoadedContent {
 }
 
 export async function loadClaimsAndRulings(bundle: McpBundle | null): Promise<LoadedContent> {
+  if (env.offline) {
+    return {claims: projectedClaims, rulings: projectedSignedRulings, source: 'offline-fixture'}
+  }
   if (bundle?.connected.groq) {
     const [claims, rulings] = await Promise.all([
       groqViaMcp<Claim[]>(bundle, ALL_CLAIMS),
@@ -38,6 +42,13 @@ export async function loadClaimsAndRulings(bundle: McpBundle | null): Promise<Lo
  * test, so they are always read over the ordinary client — routing them through
  * Context would add a hop without adding meaning.
  */
-export const loadItineraries = () => readClient().fetch<Itinerary[]>(ITINERARIES)
-export const loadItinerary = (id: string) => readClient().fetch<Itinerary | null>(ITINERARY_BY_ID, {id})
-export const loadBagItems = () => readClient().fetch<BagItem[]>(BAG_ITEMS)
+export const loadItineraries = (): Promise<Itinerary[]> =>
+  env.offline ? Promise.resolve(projectedItineraries) : readClient().fetch<Itinerary[]>(ITINERARIES)
+
+export const loadItinerary = (id: string): Promise<Itinerary | null> =>
+  env.offline
+    ? Promise.resolve(projectedItineraries.find((i) => i._id === id) ?? null)
+    : readClient().fetch<Itinerary | null>(ITINERARY_BY_ID, {id})
+
+export const loadBagItems = (): Promise<BagItem[]> =>
+  env.offline ? Promise.resolve(projectedItems) : readClient().fetch<BagItem[]>(BAG_ITEMS)
