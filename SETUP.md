@@ -95,9 +95,9 @@ Dashboard → **Context** → MCP endpoints → new endpoint.
 - Title: `Gate Check — claims`
 - Name: `gate-check-claims` (lowercase, hyphens; **immutable once saved**)
 - Source: **Dataset** → `YOUR_PROJECT_ID.production`
-- GROQ filter (optional but worth it — it stops the agent wandering into check runs):
+- GROQ filter (worth setting — it keeps the agent out of the app's own check-run records while leaving it everything it needs, including the itinerary and item ids that `resolve_verdicts` takes):
   ```
-  _type in ["claim", "ruling", "sourceDoc", "carrier", "aircraftType", "jurisdiction"]
+  _type in ["claim", "ruling", "sourceDoc", "carrier", "aircraftType", "jurisdiction", "itinerary", "bagItem"]
   ```
 - Instructions (optional): *Claims are sourced assertions, not facts. Never report a claim's value without its source document and its scope. bindingMode 'floor' means operators may be stricter.*
 
@@ -109,7 +109,17 @@ https://api.sanity.io/v1/context/organizations/YOUR_ORG_ID/mcp/gate-check-claims
 
 ## 9. Create the Knowledge Base, then its endpoint
 
-**The Knowledge Base:** Dashboard → Context → **New knowledge base**.
+**The Knowledge Base** can be made from the CLI, which is how this project's was made (`kbJyVg8R8nIJ`):
+
+```bash
+npx sanity context create --organization YOUR_ORG_ID --title "Gate Check - carrier and regulator rules" --description "..."
+npx sanity context imports create KB_ID --sanity-project YOUR_PROJECT_ID --sanity-dataset production --query '*[_type == "sourceDoc"]{title, url, publisherName, docType, excerpt, effectiveFrom, retrievedAt, "claimsReadFromThisDocument": *[_type == "claim" && references(^._id)]{subject, bindingMode, confidence, quote, note, "value": coalesce(numberValue, massKgValue, booleanValue, dimensionsValue)}}'
+npx sanity context build KB_ID --watch
+```
+
+Each source document is indexed together with the claims read out of it, so the Knowledge Base gets the notes explaining *why* a reading is uncertain, not just a two-line excerpt.
+
+Or from the dashboard: Context → **New knowledge base**.
 
 - Title: `Gate Check — carrier and regulator prose`
 - Purpose: *Help a traveller understand cabin baggage and lithium battery rules in the words the carrier and the regulator actually used, including rules too vague to turn into a number.*

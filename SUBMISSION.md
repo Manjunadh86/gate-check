@@ -92,12 +92,14 @@ That was the moment the schema stopped being a spreadsheet with extra steps.
 
 **`ruling`** — a human decision about a contradiction, stored as content. The agent may draft one; it lands as `proposed` and **changes nothing**. Only a `signed` ruling with a named person on it overrides the engine's own tie-break, and the schema enforces that: you cannot set `status: signed` without `decidedBy`. Once signed, it applies to every future question inside its scope, so the same argument is never had twice. Both rulings in the seeded dataset are unsigned on purpose — the backlog is part of the demo.
 
-### Two Context MCP endpoints, because one cannot work
+### Two Context MCP endpoints, one per job
 
-Sanity derives an endpoint's mode from its sources, and if an endpoint has both a dataset source and a Knowledge Base source, **the dataset wins and the Knowledge Bases are ignored**. An agent that needs structured claims *and* indexed prose therefore needs two endpoints:
+Sanity derives an endpoint's mode from its sources, and if an endpoint has both a dataset source and a Knowledge Base source, **the dataset wins and the Knowledge Bases are ignored**. You *can* flip one endpoint per request with `?mode=knowledge_base&knowledgeBases=…`, but then one configuration has to serve two jobs that want opposite things — the GROQ side wants a tight `groqFilter` and instructions about scopes and binding modes, the prose side wants neither. So there are two, each configured for what it is for:
 
 - `gate-check-claims` — dataset source, GROQ mode, with a `groqFilter` so the agent cannot wander into the app's own check-run records. Serves `initial_context`, `schema_explorer`, `groq_query`.
-- `gate-check-prose` — knowledge-base source, KB mode. Serves `knowledge_base_read`.
+- `gate-check-prose` — knowledge-base source, KB mode. Serves `knowledge_base_read` over a Knowledge Base built from the nine source documents, each carrying the claims read out of it and the notes explaining why a reading is uncertain.
+
+The Knowledge Base build came back with **no open issues**, and that is the right answer rather than a miss. Delta capping power banks at 100 Wh does not contradict the FAA's 160 Wh — it tightens it, which the FAA's own page invites. In prose they read as consistent. Telling a tightening from a genuine disagreement is exactly the job `bindingMode` does on the structured side, which is a fair summary of why this needs both halves.
 
 Tool names get namespaced (`content_*`, `kb_*`) on the way in, because **both modes expose a tool called `initial_context`** and merging them unprefixed silently drops one. That took an embarrassingly long time to notice, so there is now a test whose only job is to fail if it ever regresses.
 

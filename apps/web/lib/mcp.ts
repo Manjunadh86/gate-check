@@ -18,8 +18,9 @@ const connect = (url: string): Promise<McpClient> =>
  *
  * Sanity derives an endpoint's mode from its sources, and if an endpoint has both
  * a dataset source and a Knowledge Base source the dataset wins and the Knowledge
- * Bases are ignored. So an agent that needs structured claims *and* indexed prose
- * needs two endpoints, not one — which is why this returns a pair.
+ * Bases are ignored. A single endpoint can be flipped per request with
+ * `?mode=knowledge_base`, but the two modes want different filters and
+ * instructions, so each gets its own configured endpoint — hence a pair.
  *
  * Tool names are namespaced on the way out because both modes expose a tool
  * called `initial_context`; merging them unprefixed would silently drop one.

@@ -251,7 +251,7 @@ export function CheckBoard({
           </section>
 
           <section className="panel">
-            <header>Ask in your own words</header>
+            <header>Ask the AI agent in your own words</header>
             <div className="body">
               <textarea
                 className="ask"
@@ -296,12 +296,18 @@ export function CheckBoard({
           {agent ? (
             <section className="panel" style={{marginBottom: 16}}>
               <header>
-                <span>The agent’s answer</span>
+                <span>AI agent’s answer</span>
                 <span>
                   {agent.model} · {agent.steps} steps · {agent.toolCalls.length} tool calls
                 </span>
               </header>
               <div className="body">
+                {/* Required, not decorative: Anthropic's Usage Policy says every
+                    consumer-facing agent must disclose that it is AI. */}
+                <p className="hint" style={{marginTop: 0}}>
+                  Written by an AI model from the sources below. It can be wrong — check the linked source, and get
+                  anything approval-related in writing from the operating carrier.
+                </p>
                 <div className="answer">{agent.answer}</div>
                 <details style={{marginTop: 14}}>
                   <summary className="trace" style={{cursor: 'pointer'}}>

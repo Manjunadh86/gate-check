@@ -50,7 +50,7 @@ agent (Claude, via AI SDK)
                           server-side write ──→ checkRun + proposed rulings
 ```
 
-**Two Context endpoints, not one.** Sanity derives an endpoint's mode from its sources, and if an endpoint has both a dataset source and a Knowledge Base source, the dataset wins and the Knowledge Bases are ignored. An agent that needs structured claims *and* indexed prose therefore needs two endpoints. Tool names are namespaced on the way in, because both modes expose a tool called `initial_context` and merging them unprefixed silently drops one.
+**Two Context endpoints, one per job.** Sanity derives an endpoint's mode from its sources, and if an endpoint has both a dataset source and a Knowledge Base source, the dataset wins and the Knowledge Bases are ignored. One endpoint *can* be flipped per request with `?mode=knowledge_base&knowledgeBases=…`, but the GROQ side wants a tight `groqFilter` and instructions about scopes and binding modes while the prose side wants neither, so each mode gets an endpoint configured for what it is for. Tool names are namespaced on the way in, because both modes expose a tool called `initial_context` and merging them unprefixed silently drops one.
 
 **The corpus justifies the split.** American Airlines' notice says *"Large portable power banks … are not allowed as carry-on or checked items"* and never defines "large". There is no number to compute with, so it carries no structured claim at all — it is exactly the prose the Knowledge Base exists to return. Meanwhile the FAA's 160 Wh ceiling is a number, and belongs in GROQ mode where the engine can compare against it.
 
