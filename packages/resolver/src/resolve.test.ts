@@ -57,8 +57,8 @@ describe('currency', () => {
   })
 
   test('a superseding claim removes the one it replaces without deleting it', () => {
-    const old = f.claim('carryOnMaxMassKg', 10, {id: 'clm.old'})
-    const next = f.claim('carryOnMaxMassKg', 7, {supersedesId: 'clm.old', effectiveFrom: '2026-03-01'})
+    const old = f.claim('carryOnMaxMassKg', 10, {id: 'clm-old'})
+    const next = f.claim('carryOnMaxMassKg', 7, {supersedesId: 'clm-old', effectiveFrom: '2026-03-01'})
     const live = currentClaims([old, next], '2026-10-20')
     assert.deepEqual(live.map((c) => c._id), [next._id])
   })
@@ -130,8 +130,8 @@ describe('resolution', () => {
   })
 
   test('two carrier rules of equal standing fall back to the tighter one and say so', () => {
-    const a = f.claim('carryOnMaxMassKg', 7, {id: 'clm.a', scope: {carrierIds: [f.delta._id]}})
-    const b = f.claim('carryOnMaxMassKg', 10, {id: 'clm.b', scope: {carrierIds: [f.delta._id]}})
+    const a = f.claim('carryOnMaxMassKg', 7, {id: 'clm-a', scope: {carrierIds: [f.delta._id]}})
+    const b = f.claim('carryOnMaxMassKg', 10, {id: 'clm-b', scope: {carrierIds: [f.delta._id]}})
     const r = resolveSubject('carryOnMaxMassKg', [a, b], [], sit())
     assert.equal(r.method, 'most-restrictive')
     assert.equal(r.unresolved, true, 'nobody has ruled, so this stays on the backlog')
@@ -140,10 +140,10 @@ describe('resolution', () => {
   })
 
   test('a signed ruling settles a conflict and is preferred to the safety fallback', () => {
-    const a = f.claim('carryOnMaxMassKg', 7, {id: 'clm.a', scope: {carrierIds: [f.delta._id]}})
-    const b = f.claim('carryOnMaxMassKg', 10, {id: 'clm.b', scope: {carrierIds: [f.delta._id]}})
+    const a = f.claim('carryOnMaxMassKg', 7, {id: 'clm-a', scope: {carrierIds: [f.delta._id]}})
+    const b = f.claim('carryOnMaxMassKg', 10, {id: 'clm-b', scope: {carrierIds: [f.delta._id]}})
     const r = resolveSubject('carryOnMaxMassKg', [a, b], [
-      f.ruling({subject: 'carryOnMaxMassKg', chosenId: 'clm.b', conflictingIds: ['clm.a', 'clm.b']}),
+      f.ruling({subject: 'carryOnMaxMassKg', chosenId: 'clm-b', conflictingIds: ['clm-a', 'clm-b']}),
     ], sit())
     assert.equal(r.method, 'signed-ruling')
     assert.equal(r.value.kind === 'number' && r.value.n, 10)
@@ -151,8 +151,8 @@ describe('resolution', () => {
   })
 
   test('a proposed ruling is ignored — only a signed one binds', () => {
-    const a = f.claim('carryOnMaxMassKg', 7, {id: 'clm.a', scope: {carrierIds: [f.delta._id]}})
-    const b = f.claim('carryOnMaxMassKg', 10, {id: 'clm.b', scope: {carrierIds: [f.delta._id]}})
+    const a = f.claim('carryOnMaxMassKg', 7, {id: 'clm-a', scope: {carrierIds: [f.delta._id]}})
+    const b = f.claim('carryOnMaxMassKg', 10, {id: 'clm-b', scope: {carrierIds: [f.delta._id]}})
     // resolveSubject is only ever handed signed rulings, so the guard is at the
     // query boundary. This asserts the query contract rather than the function.
     const r = resolveSubject('carryOnMaxMassKg', [a, b], [], sit())
@@ -160,8 +160,8 @@ describe('resolution', () => {
   })
 
   test('dimension sets that are each larger on a different axis are left unresolved rather than averaged', () => {
-    const wide = f.claim('carryOnMaxDimensionsMm', {l: 457, w: 356, h: 178}, {id: 'clm.wide'})
-    const deep = f.claim('carryOnMaxDimensionsMm', {l: 406, w: 330, h: 203}, {id: 'clm.deep'})
+    const wide = f.claim('carryOnMaxDimensionsMm', {l: 457, w: 356, h: 178}, {id: 'clm-wide'})
+    const deep = f.claim('carryOnMaxDimensionsMm', {l: 406, w: 330, h: 203}, {id: 'clm-deep'})
     const r = resolveSubject('carryOnMaxDimensionsMm', [wide, deep], [], sit())
     assert.equal(r.method, 'unresolvable')
     assert.equal(r.unresolved, true)

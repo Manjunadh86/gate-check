@@ -18,10 +18,10 @@ import type {
 } from '@gate-check/content-model'
 import type {BindingMode, ResolvedScope} from '@gate-check/content-model'
 
-export const US = 'jur.us'
+export const US = 'jur-us'
 
 export const faa: SourceRef = {
-  _id: 'src.faa.lithium',
+  _id: 'src-faa-lithium',
   title: 'PackSafe — Lithium Batteries',
   url: 'https://www.faa.gov/hazmat/packsafe/lithium-batteries',
   publisherName: 'Federal Aviation Administration',
@@ -32,7 +32,7 @@ export const faa: SourceRef = {
 }
 
 export const deltaBattery: SourceRef = {
-  _id: 'src.dl.battery',
+  _id: 'src-dl-battery',
   title: 'Battery or Fuel-Powered Items',
   url: 'https://www.delta.com/us/en/baggage/prohibited-or-restricted-items/battery-or-fuel-powered',
   publisherName: 'Delta Air Lines',
@@ -42,7 +42,7 @@ export const deltaBattery: SourceRef = {
 }
 
 export const deltaCarryOn: SourceRef = {
-  _id: 'src.dl.carryon',
+  _id: 'src-dl-carryon',
   title: 'Carry-On Baggage',
   url: 'https://www.delta.com/us/en/baggage/carry-on-baggage',
   publisherName: 'Delta Air Lines',
@@ -52,7 +52,7 @@ export const deltaCarryOn: SourceRef = {
 }
 
 export const delta: Carrier = {
-  _id: 'car.dl',
+  _id: 'car-dl',
   name: 'Delta Air Lines',
   iata: 'DL',
   countryId: US,
@@ -65,7 +65,7 @@ export const delta: Carrier = {
 }
 
 export const endeavor: Carrier = {
-  _id: 'car.9e',
+  _id: 'car-9e',
   name: 'Endeavor Air',
   iata: '9E',
   countryId: US,
@@ -73,7 +73,7 @@ export const endeavor: Carrier = {
 }
 
 export const b739: AircraftType = {
-  _id: 'ac.739',
+  _id: 'ac-739',
   name: 'Boeing 737-900',
   iataCode: '739',
   family: 'narrowbody',
@@ -83,7 +83,7 @@ export const b739: AircraftType = {
 }
 
 export const crj200: AircraftType = {
-  _id: 'ac.crj2',
+  _id: 'ac-crj2',
   name: 'Bombardier CRJ-200',
   iataCode: 'CR2',
   family: 'regional-jet',
@@ -122,7 +122,7 @@ export function claim(
   } = {},
 ): Claim {
   const base: Claim = {
-    _id: opts.id ?? `clm.${++seq}`,
+    _id: opts.id ?? `clm-${++seq}`,
     subject,
     bindingMode: opts.bindingMode ?? 'override',
     scope: {...emptyScope(), ...opts.scope},
@@ -156,7 +156,7 @@ export function segment(over: Partial<Segment> = {}): Segment {
 
 export function itinerary(over: Partial<Itinerary> = {}): Itinerary {
   return {
-    _id: 'itn.test',
+    _id: 'itn-test',
     label: 'test',
     travelDate: '2026-10-20',
     segments: [segment()],
@@ -167,7 +167,7 @@ export function itinerary(over: Partial<Itinerary> = {}): Itinerary {
 
 export function item(over: Partial<BagItem> = {}): BagItem {
   return {
-    _id: 'itm.test',
+    _id: 'itm-test',
     label: 'test item',
     category: 'cabin-bag',
     batteryState: 'none',
@@ -179,7 +179,7 @@ export function item(over: Partial<BagItem> = {}): BagItem {
 
 export function ruling(over: Partial<Ruling> & Pick<Ruling, 'subject' | 'chosenId' | 'conflictingIds'>): Ruling {
   return {
-    _id: 'rul.test',
+    _id: 'rul-test',
     scope: emptyScope(),
     rationale: 'because a person decided',
     status: 'signed',

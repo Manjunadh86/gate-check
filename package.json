@@ -17,9 +17,10 @@
     "build": "npm run build -w @gate-check/web",
     "typecheck": "tsc --noEmit -p packages/content-model && tsc --noEmit -p packages/resolver",
     "test": "node --test packages/resolver/src/*.test.ts apps/web/lib/*.test.ts evals/*.test.ts",
-    "seed": "node seed/import.ts",
+    "seed": "node --env-file=.env seed/import.ts",
     "eval": "node --experimental-strip-types evals/run.ts",
-    "seed:ndjson": "node seed/import.ts --ndjson"
+    "seed:ndjson": "node seed/import.ts --ndjson",
+    "test:live": "node --env-file=.env --test evals/live-parity.test.ts"
   },
   "devDependencies": {
     "@types/node": "^24.5.2",

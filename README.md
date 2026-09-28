@@ -85,7 +85,8 @@ evals/                    11 known-answer cases, runnable with no Sanity account
 
 ```bash
 npm install
-npm test          # 45 tests: 26 resolver, 8 MCP wiring, 3 agent loop, 8 GROQ parity
+npm test          # 47 tests: 26 resolver, 8 MCP wiring, 3 agent loop, 10 GROQ parity and seed integrity
+npm run test:live # 5 more against the live Content Lake, once a project is configured
 npm run eval      # 11 known-answer cases against the seeded corpus
 npm run typecheck
 ```
@@ -121,6 +122,8 @@ It found two real defects the moment it was written:
 - **Raw object projections were leaking Sanity's internal `_type` and `_key` keys** into results typed as plain value objects. Every object is now projected explicitly, which is the right habit anyway.
 
 Neither was visible from reading the code, and neither would have shown up until a demo.
+
+A third only appeared against the live project: **Sanity hides any document whose id contains a period from anonymous reads, even in a public dataset.** The first import used ids like `clm.faa.cabinonly`; the dataset held 63 documents and an unauthenticated `count(*)` returned 0. The ids are hyphenated now, `evals/parity.test.ts` fails if a dotted id or a dangling reference ever reappears in the seed, and `npm run test:live` runs the real queries against the Content Lake and asserts they match the offline projection.
 
 ## The corpus
 

@@ -42,6 +42,39 @@ const normalise = (v: unknown) => JSON.parse(JSON.stringify(v, (_k, x) => (x ===
 
 const sortById = <T extends {_id: string}>(rows: T[]) => [...rows].sort((a, b) => a._id.localeCompare(b._id))
 
+describe('seeded document ids', () => {
+  /**
+   * Sanity treats any document id containing a period as private: it is hidden
+   * from anonymous reads even in a public dataset. The first seeding of this
+   * project used ids like \`clm.faa.cabinonly\`, and the public dataset came back
+   * empty to an unauthenticated query while holding all 63 documents. Judges
+   * reading the public dataset would have seen nothing, and the app's direct
+   * reader would have disagreed with Context MCP, which reads with a token.
+   *
+   * Only caught by testing against the live Content Lake. This makes it a build
+   * failure instead.
+   */
+  test('no seeded _id contains a period', () => {
+    const dotted = allDocuments.map((d) => d._id).filter((id) => id.includes('.'))
+    assert.deepEqual(dotted, [], `these ids would be invisible to anonymous readers: ${dotted.join(', ')}`)
+  })
+
+  test('every reference in the seed points at a document that exists', () => {
+    const ids = new Set(allDocuments.map((d) => d._id))
+    const dangling: string[] = []
+    const walk = (v: unknown, from: string) => {
+      if (Array.isArray(v)) return v.forEach((x) => walk(x, from))
+      if (v && typeof v === 'object') {
+        const o = v as Record<string, unknown>
+        if (typeof o._ref === 'string' && !ids.has(o._ref)) dangling.push(`${from} -> ${o._ref}`)
+        Object.values(o).forEach((x) => walk(x, from))
+      }
+    }
+    allDocuments.forEach((d) => walk(d, d._id))
+    assert.deepEqual(dangling, [])
+  })
+})
+
 describe('GROQ projections parse and evaluate', () => {
   test('every shipped query is valid GROQ', () => {
     for (const [name, query] of Object.entries({
@@ -73,8 +106,8 @@ describe('GROQ projections parse and evaluate', () => {
   })
 
   test('ITINERARY_BY_ID returns the same document as the list projection', async () => {
-    const one = await run<{_id: string}>(ITINERARY_BY_ID, {id: 'itn.dl.regional'})
-    const fromList = projectedItineraries.find((i) => i._id === 'itn.dl.regional')
+    const one = await run<{_id: string}>(ITINERARY_BY_ID, {id: 'itn-dl-regional'})
+    const fromList = projectedItineraries.find((i) => i._id === 'itn-dl-regional')
     assert.deepEqual(normalise(one), normalise(fromList))
   })
 
@@ -87,15 +120,15 @@ describe('GROQ projections parse and evaluate', () => {
     // Sign one and confirm it appears, so the emptiness above is the filter working
     // rather than the query being broken.
     const signed = allDocuments.map((d) =>
-      d._id === 'rul.pb.wh'
+      d._id === 'rul-pb-wh'
         ? {...(d as Record<string, unknown>), status: 'signed', decidedBy: 'Parity test', decidedAt: '2026-09-27T00:00:00Z'}
         : d,
     )
     const tree = parse(SIGNED_RULINGS)
     const withSigned = (await (await evaluate(tree, {dataset: signed})).get()) as {_id: string; chosenId: string}[]
     assert.equal(withSigned.length, 1)
-    assert.equal(withSigned[0]!._id, 'rul.pb.wh')
-    assert.equal(withSigned[0]!.chosenId, 'clm.dl.pb.wh', 'the chosen claim reference must project to a bare id')
+    assert.equal(withSigned[0]!._id, 'rul-pb-wh')
+    assert.equal(withSigned[0]!.chosenId, 'clm-dl-pb-wh', 'the chosen claim reference must project to a bare id')
   })
 
   test('authority is derived in GROQ, not stored, and ranks the corpus as intended', async () => {

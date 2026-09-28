@@ -5,7 +5,7 @@ description: An agent that answers cabin-baggage and lithium-battery questions p
 tags: sanitychallenge, ai, sanity, webdev
 ---
 
-> **Before publishing, replace:** `<<DEMO_URL>>`, `<<REPO_URL>>`, `<<PROJECT_ID>>`, `<<STUDIO_URL>>`, `<<AGENT_SESSION_EMBED>>`. Then delete this line.
+> **Before publishing, replace:** `<<DEMO_URL>>`, `<<AGENT_SESSION_EMBED>>`. Then delete this line.
 
 Delta will let you carry a 137 Wh cine battery. It will refuse the identical 137 Wh power bank. Same flight, same cell, same watt-hours — different answer, because one is a camera battery and the other is a power bank, and Delta files a stricter figure for power banks than the FAA requires.
 
@@ -61,11 +61,11 @@ Three more things worth clicking:
 
 ## Code
 
-**<<REPO_URL>>**
+**https://github.com/Manjunadh86/gate-check**
 
 ```bash
 npm install
-npm test      # 45 tests: 26 resolver, 8 MCP wiring, 3 agent loop, 8 GROQ parity
+npm test      # 47 tests: 26 resolver, 8 MCP wiring, 3 agent loop, 10 GROQ parity and seed integrity
 npm run eval  # 11 known-answer cases against the real corpus
 ```
 
@@ -130,6 +130,8 @@ It found two genuine bugs in the first run:
 
 Neither was visible from reading the code. Both would have surfaced during a demo, which is a worse place to find them.
 
+The third defect only showed up against the live project. The first import used ids like `clm.faa.cabinonly`, and **Sanity treats any document id containing a period as private** — hidden from anonymous reads even in a public dataset. The dataset held 63 documents and an unauthenticated query returned zero. Judges opening the public dataset would have seen nothing, and the app's direct reader would have silently disagreed with Context MCP, which reads with a token. The ids are hyphenated now, a test fails the build if a dotted id ever comes back, and a second parity suite runs the real queries against the Content Lake itself (`npm run test:live`) and asserts the results match what the offline tests assume.
+
 ## What it refuses to do
 
 Most of the work here went into *not* answering.
@@ -151,9 +153,9 @@ Most of the work here went into *not* answering.
 
 ## Sanity Project Details
 
-- **Project ID:** `<<PROJECT_ID>>`
-- **Dataset:** `production` (public — read it without a token)
-- **Studio:** <<STUDIO_URL>>
+- **Project ID:** `6bjkg0ul`
+- **Dataset:** `production` (public — read it without a token: [`count(*)`](https://6bjkg0ul.api.sanity.io/v2021-06-07/data/query/production?query=count(*)))
+- **Studio:** https://gate-check.sanity.studio
 - **Public dataset export:** `seed/dataset.ndjson` in the repo — all 63 documents, importable with `npx sanity dataset import`
 
 **What to look at, if you are judging the content model:** open the Studio and go to **Needs a decision → Proposed rulings**, then **Claims by binding mode**. The Studio structure is organised around the questions an auditor asks — which claims disagree, which sources are weak, what decisions are outstanding — rather than around document types. Vision is left enabled so you can run the app's own GROQ queries against the live dataset.

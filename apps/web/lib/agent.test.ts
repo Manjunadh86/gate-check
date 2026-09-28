@@ -106,7 +106,7 @@ describe('the agent loop', () => {
     try {
       const model = toolCallThen(
         'resolve_verdicts',
-        {itineraryId: 'itn.dl.regional', itemIds: ['itm.rollaboard', 'itm.cam16x4']},
+        {itineraryId: 'itn-dl-regional', itemIds: ['itm-rollaboard', 'itm-cam16x4']},
         'Your bag is fine to Atlanta and cannot come into the cabin on the way home.',
       )
       const result = await runCheck('Can I take my roll-aboard and four camera batteries?', {model})
@@ -141,7 +141,7 @@ describe('the agent loop', () => {
     try {
       const model = toolCallThen(
         'resolve_verdicts',
-        {itineraryId: 'itn.does.not.exist', itemIds: ['itm.rollaboard']},
+        {itineraryId: 'itn-does-not-exist', itemIds: ['itm-rollaboard']},
         'I could not find that itinerary.',
       )
       const result = await runCheck('anything', {model})

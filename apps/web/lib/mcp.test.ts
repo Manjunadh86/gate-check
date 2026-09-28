@@ -17,7 +17,7 @@ describe('Context MCP wiring', () => {
 
   before(async () => {
     groqServer = await startFakeContextServer('groq', (query) =>
-      query.includes('"claim"') ? [{_id: 'clm.one', subject: 'spareBatteryMaxWh'}] : [],
+      query.includes('"claim"') ? [{_id: 'clm-one', subject: 'spareBatteryMaxWh'}] : [],
     )
     kbServer = await startFakeContextServer('knowledge_base')
     process.env.SANITY_ORGANIZATION_TOKEN = 'org-token-for-tests'
@@ -69,7 +69,7 @@ describe('Context MCP wiring', () => {
       // must get the rows, not either wrapper.
       assert.ok(Array.isArray(rows), `expected an array, got ${typeof rows}`)
       assert.equal(rows.length, 1)
-      assert.equal(rows[0]!._id, 'clm.one')
+      assert.equal(rows[0]!._id, 'clm-one')
       assert.ok(groqServer.queries.some((q) => q.includes('_type == "claim"')))
     } finally {
       await closeMcp(bundle)
